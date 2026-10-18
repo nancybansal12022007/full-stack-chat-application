@@ -8,9 +8,7 @@ import Messages from "./message";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const supabase = createServerComponentClient<Database>({
-    cookies,
-  });
+  const supabase = createServerComponentClient({ cookies });
 
   const {
     data: { session },
@@ -20,22 +18,13 @@ export default async function Home() {
     redirect("/login");
   }
 
+  // Fetch only the messages table
   const { data } = await supabase
     .from("messages")
-    .select("*, author: profiles(*),likes(user_id)")
+    .select("*")
     .order("created_at", { ascending: false });
 
-  const messages =
-    data?.map((message) => ({
-      ...message,
-      author: Array.isArray(message.author)
-        ? message.author[0]
-        : message.author,
-      user_has_liked_message: !!message.likes.find(
-        (like) => like.user_id === session.user.id
-      ),
-      likes: message.likes.length,
-    })) ?? [];
+  const messages = data ?? [];
 
   return (
     <div className="w-full max-w-xl mx-auto text-white">
